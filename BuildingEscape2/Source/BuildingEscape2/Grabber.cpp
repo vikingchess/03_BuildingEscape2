@@ -1,7 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Grabber.h"
+#include "DrawDebugHelpers.h"
 
+// simple macro to help with the annotations of out parameters of GetPlayerViewPoint
+#define OUT
 
 // Sets default values for this component's properties
 UGrabber::UGrabber()
@@ -28,7 +31,29 @@ void UGrabber::BeginPlay()
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	FVector  PlayerViewPointLocation;
+	FRotator PlayerViewPointRotation;
+	
 
-	// ...
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT PlayerViewPointLocation,
+		OUT PlayerViewPointRotation
+	);
+	//UE_LOG(LogTemp, Warning, TEXT("Location : %s, Rotation: %s"),
+	//		*PlayerViewPointLocation.ToString(),
+	//		*PlayerViewPointRotation.ToString())
+
+	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * Reach);
+
+	DrawDebugLine(
+		GetWorld(),
+		PlayerViewPointLocation,
+		LineTraceEnd,
+		FColor(255, 0, 0),
+		false,
+		0.f,
+		0.f,
+		10.f
+	);
 }
 
