@@ -2,6 +2,10 @@
 
 #include "Grabber.h"
 #include "DrawDebugHelpers.h"
+#include "WorldCollision.h"
+#include "CollisionQueryParams.h"
+
+
 
 // simple macro to help with the annotations of out parameters of GetPlayerViewPoint
 #define OUT
@@ -39,9 +43,6 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 		OUT PlayerViewPointLocation,
 		OUT PlayerViewPointRotation
 	);
-	//UE_LOG(LogTemp, Warning, TEXT("Location : %s, Rotation: %s"),
-	//		*PlayerViewPointLocation.ToString(),
-	//		*PlayerViewPointRotation.ToString())
 
 	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * Reach);
 
@@ -55,5 +56,23 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 		0.f,
 		10.f
 	);
+		/// line trace
+
+	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());;
+		
+	FHitResult Hit;
+
+		GetWorld()->LineTraceSingleByObjectType(
+			OUT Hit,
+			PlayerViewPointLocation,
+			LineTraceEnd,
+			FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody)
+			/// TODO TraceParameters I omitted this paramenter to make it work why?
+		);
+		AActor* ActorHit = Hit.GetActor();
+		if (ActorHit)
+			{
+			UE_LOG(LogTemp, Warning, TEXT("Line trace hit: %s"), *(ActorHit->GetName()))
+			 }
 }
 
