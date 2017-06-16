@@ -4,7 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "PhysicsEngine/PhysicsHandleComponent.h"
+#include "DrawDebugHelpers.h"
+#include "WorldCollision.h"
+#include "CollisionQueryParams.h"
 #include "Grabber.generated.h"
+///#include generated h files are always last in the include list
+
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -24,6 +30,8 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-private: float Reach = 200.f;
+private: 
+	float Reach = 200.f;
 	
+	UPhysicsHandleComponent* PhysicsHandle = nullptr;
 };
