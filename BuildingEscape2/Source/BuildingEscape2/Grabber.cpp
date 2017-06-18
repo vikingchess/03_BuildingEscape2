@@ -3,11 +3,7 @@
 #include "Grabber.h"
 # include "BuildingEscape.h"
 
-
-
-
-// simple macro to help with the annotations of out parameters of GetPlayerViewPoint
-#define OUT
+#define OUT // simple macro to help with the annotations of out parameters of GetPlayerViewPoint
 
 // Sets default values for this component's properties
 UGrabber::UGrabber()
@@ -28,8 +24,6 @@ void UGrabber::BeginPlay()
 // Grabs objects
 void UGrabber::Grab()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Grab pressed"))
-
 		///Line trace to see if we reach actors with physics body collision channel set
 	auto HitResult = GetFirstPhysicsBodyInReach();
 	auto ComponentToGrab = HitResult.GetComponent();
@@ -50,20 +44,13 @@ void UGrabber::Grab()
 // Releases object
 void UGrabber::Release()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Grab released"))
-
-		//TODO Release physics body
 		PhysicsHandle->ReleaseComponent();
 }
 // locate the physics handle component
 void UGrabber::FindPhysicsHandleComponent()
 {
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
-	if (PhysicsHandle)
-	{
-		// Physics handle is found
-	}
-	else
+	if (PhysicsHandle == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s missing physics handle component"), *GetOwner()->GetName())
 	}
@@ -74,7 +61,6 @@ void UGrabber::SetupInputComponent()
 	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 	if (InputComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Input component found"))
 		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
 		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::Release);
 	}
@@ -87,26 +73,29 @@ void UGrabber::SetupInputComponent()
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	FVector  PlayerViewPointLocation;
-	FRotator PlayerViewPointRotation;
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
-		OUT PlayerViewPointLocation,
-		OUT PlayerViewPointRotation
-	);
-	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * Reach);
 
 	/// If the physics handle is attached
 	if (PhysicsHandle->GrabbedComponent)
 	{
 		// move object that is held
-		PhysicsHandle->SetTargetLocation(LineTraceEnd);
-
+		PhysicsHandle->SetTargetLocation(GetReachLineEnd());
 	}
-		
-
-
 }
 const FHitResult UGrabber::GetFirstPhysicsBodyInReach()
+{
+	FHitResult HitResults;
+	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
+	GetWorld()->LineTraceSingleByObjectType(
+		OUT HitResults,
+		GetReachLineStart(),
+		GetReachLineEnd(),
+		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
+		TraceParameters
+	);
+	return HitResults;
+}
+
+FVector UGrabber::GetReachLineStart()
 {
 	FVector  PlayerViewPointLocation;
 	FRotator PlayerViewPointRotation;
@@ -114,23 +103,19 @@ const FHitResult UGrabber::GetFirstPhysicsBodyInReach()
 		OUT PlayerViewPointLocation,
 		OUT PlayerViewPointRotation
 	);
-	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * Reach);
-	/// line trace
-	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());;
-	FHitResult Hit;
-	GetWorld()->LineTraceSingleByObjectType(
-		OUT Hit,
-		PlayerViewPointLocation,
-		LineTraceEnd,
-		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody)
-		/// TODO TraceParameters I omitted this paramenter to make it work why?
-	);
-	AActor* ActorHit = Hit.GetActor();
-	if (ActorHit)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Line trace hit: %s"), *(ActorHit->GetName()))
-	}
-	return Hit;
+	return PlayerViewPointLocation;
 }
+
+FVector UGrabber::GetReachLineEnd()
+{
+	FVector PlayerViewPointLocation;
+	FRotator PlayerViewPointRotation;
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT PlayerViewPointLocation,
+		OUT PlayerViewPointRotation
+	);
+	return PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
+}
+
 
 
