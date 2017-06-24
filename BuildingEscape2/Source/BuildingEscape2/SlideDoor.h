@@ -3,11 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine.h"
 #include "Components/ActorComponent.h"
 #include "SlideDoor.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSlideDoorEvent);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+
 class BUILDINGESCAPE2_API USlideDoor : public UActorComponent
 {
 	GENERATED_BODY()
@@ -23,7 +26,22 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
+	UPROPERTY(BlueprintAssignable)
+		FSlideDoorEvent OnSlideOpen;
 
+	UPROPERTY(BlueprintAssignable)
+		FSlideDoorEvent OnSlideClose;
+private:
+
+	UPROPERTY(EditAnywhere)
+		ATriggerVolume* SlideDoorPressurePlate = nullptr;
+
+	UPROPERTY(EditAnywhere)
+		float TriggerMass = 30.f;
+
+	AActor* Owner = nullptr; // Owning door
+	float GetTotalMassOfActorsOnPlate();
 		
 	
 };

@@ -1,7 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SlideDoor.h"
+#include "GameFramework/Actor.h"
 
+#define OUT
 
 // Sets default values for this component's properties
 USlideDoor::USlideDoor()
@@ -13,14 +15,11 @@ USlideDoor::USlideDoor()
 	// ...
 }
 
-
 // Called when the game starts
 void USlideDoor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-	
+	Owner = GetOwner();
 }
 
 
@@ -28,7 +27,28 @@ void USlideDoor::BeginPlay()
 void USlideDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	
+	if (GetTotalMassOfActorsOnPlate() > TriggerMass)
+	{
+		OnSlideOpen.Broadcast();
+	}
+	else
+	{
+		OnSlideClose.Broadcast();
+	}
+}
 
-	// ...
+float USlideDoor::GetTotalMassOfActorsOnPlate()
+{
+	float TotalMass = 0.f;
+	TArray<AActor*> OverlappingActors;
+	SlideDoorPressurePlate->GetOverlappingActors(OUT OverlappingActors);
+	for (const auto* Actor : OverlappingActors)
+	{
+		TotalMass += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+		UE_LOG(LogTemp, Warning, TEXT(" %s on preassure plate"), *Actor->GetName())
+	}
+
+	return TotalMass;
 }
 
